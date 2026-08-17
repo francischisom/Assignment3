@@ -140,6 +140,3 @@ independent external validation on a larger, clinically representative, expert-a
 
 ---
 
-> **Optional additions:** a `requirements.txt`, a `.gitignore` (exclude the dataset and large
-> checkpoints), and a `LICENSE`. Also check your module's policy on public coursework — some
-> programmes require repos to stay **private** until after grading.
