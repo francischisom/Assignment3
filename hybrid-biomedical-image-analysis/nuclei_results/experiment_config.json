@@ -1,0 +1,26 @@
+{
+  "seed": 42,
+  "image_size": [
+    256,
+    256
+  ],
+  "device": "cuda",
+  "vision_model_task1": "qwen2.5vl:7b",
+  "text_model_task2_task4": "llama3.2:3b",
+  "unet": {
+    "base_channels": [
+      32,
+      64,
+      128,
+      256
+    ],
+    "epochs_main": 15,
+    "batch_size": 8,
+    "learning_rate": 0.001,
+    "loss": "BCE + Dice"
+  },
+  "classical": {
+    "method": "Otsu + opening + closing + remove_small_objects",
+    "min_object_size": 20
+  }
+}
