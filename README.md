@@ -1,4 +1,4 @@
-# Hybrid Biomedical Image Analysis — An Auditable Data Science Pipeline
+# Hybrid Biomedical Image Analysis 
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
 ![PyTorch](https://img.shields.io/badge/PyTorch-U--Net-red)
