@@ -1,26 +1,32 @@
-# Hybrid Biomedical Image Analysis
+# Hybrid Biomedical Image Analysis — An Auditable Data Science Pipeline
 
-An end-to-end, auditable pipeline for **fluorescence-microscopy nuclei segmentation** that keeps
-language generation *downstream* of measurable image evidence. It links preprocessing, a
-vision–language model (VLM) description, classical Otsu segmentation with quantitative region
-features, a PyTorch **U-Net**, and a "numbers-first" LLM interpretation stage — with structured
-JSON kept as the source of truth at every step.
+![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
+![PyTorch](https://img.shields.io/badge/PyTorch-U--Net-red)
+![Ollama](https://img.shields.io/badge/Ollama-Qwen2.5--VL%20%7C%20Llama3.2-black)
+![License](https://img.shields.io/badge/License-MIT-green)
 
-**Author:** Ofonagoro Chisom Francis 
+An end-to-end, auditable pipeline for **fluorescence-microscopy nuclei segmentation**. It keeps
+language generation *downstream* of measurable image evidence: preprocessing and EDA, a
+**Qwen2.5-VL** visual description, classical **Otsu** segmentation with quantitative region
+features, a **PyTorch U-Net**, and a numbers-first LLM interpretation stage — with structured JSON
+kept as the source of truth at every step.
+
+**Author:** Ofonagoro Chisom Francis · MSc Applied Data Science, University of Hertfordshire
+
 ---
 
 ## Overview
 
-The guiding idea is that predictive accuracy and *trustworthiness* are different properties. The
-pipeline is built so every narrative claim can be traced back to a measured number, and so
-failures are visible rather than hidden behind fluent prose.
+The central idea is that predictive accuracy and *trustworthiness* are separate properties. Every
+narrative claim traces back to a measured number, and failures stay visible instead of being hidden
+behind fluent prose.
 
 | Stage | What it does |
 |---|---|
-| **Task 1 — VLM description** | Preprocessing + EDA, then a direct VLM description, comparing a naive vs. a prompt-engineered request. |
+| **Task 1 — VLM description** | Preprocessing + EDA, then a Qwen2.5-VL description with a naive vs. prompt-engineered comparison. |
 | **Task 2 — Classical + numbers-first** | Otsu + morphology + `regionprops_table`; a text-only LLM interprets *only* the measured features. |
 | **Task 3 — U-Net** | A compact PyTorch U-Net (BCE+Dice), evaluated against the Otsu baseline. |
-| **Task 4 — Hybrid pipeline** | U-Net → region features → text LLM → validated JSON + short narrative, aggregated to CSV/JSON. |
+| **Task 4 — Hybrid pipeline** | U-Net -> region features -> text LLM -> validated JSON + narrative, aggregated to CSV/JSON. |
 | **Extensions** | Loss ablation (BCE / Dice / BCE+Dice) and a robustness experiment (blur / low contrast). |
 
 ### Headline results
@@ -28,90 +34,99 @@ failures are visible rather than hidden behind fluent prose.
 | Method | Validation Dice | Validation IoU |
 |---|---|---|
 | Otsu + morphology (baseline) | 0.9781 | 0.9572 |
-| **Main U-Net (BCE+Dice, 15 ep.)** | **0.9958** | **0.9916** |
-| U-Net — held-out test (12 images) | 0.9960 | 0.9921 |
+| **Main U-Net (BCE+Dice, 15 ep.)** | **0.9940** | **0.9881** |
+| U-Net — held-out test (12 images) | 0.9936 | 0.9874 |
 
-The U-Net beat Otsu on all 20 validation images. A blur-corruption test shows the first
-detectable failure is at **segmentation** (Dice collapses to 0.7357), before feature extraction —
-downstream language cannot repair an upstream segmentation error.
+The U-Net beat Otsu on every one of the 20 validation images. In the 10-epoch loss ablation, **BCE**
+gave the best short-run Dice (0.9932). A blur-corruption test shows the first detectable failure is
+at **segmentation** (Dice collapses to 0.7357), before feature extraction — downstream language
+cannot repair an upstream segmentation error.
+
+---
+
+## Models
+
+| Role | Model | Runtime |
+|---|---|---|
+| Task 1 vision-language description | `qwen2.5vl:7b` (Qwen2.5-VL 7B) | Ollama |
+| Tasks 2 & 4 text-only interpretation | `llama3.2:3b` | Ollama |
+
+> The assessment brief specified `llama3.2-vision`; the module announcement permitted an alternative
+> vision model when compatibility problems occur, so **Qwen2.5-VL** is used for Task 1. This is an
+> authorised substitution — the VLM outputs reflect Qwen2.5-VL, not `llama3.2-vision`.
 
 ---
 
 ## Repository structure
 
 ```
-Assignment3/                                                    # repository root
+hybrid-biomedical-image-analysis/
 ├── README.md
-└── Assignment_3/
-    ├── Assignment3_Hybrid_Biomedical_Image_Analysis.ipynb      # main notebook (Tasks 1–4)
-    │
-    ├── figures/                                                # figures
-    │
-    ├── assignment3_output/                                     # raw run outputs
-    │   ├── hybrid_test_records.csv
-    │   ├── hybrid_test_records.json
-    │   ├── hybrid_raw_llm_outputs.json
-    │   └── validation_otsu_vs_unet.csv
-    │
-    └── assignment3_submission/                                 # submission artifacts
-        ├── experiment_config.json                             # run config (seed, split, hyperparams)
-        ├── unet_bce_dice_best.pt                              # best U-Net checkpoint
-        ├── hybrid_test_records.json
-        ├── hybrid_raw_llm_outputs.json
-        ├── validation_otsu_vs_unet.csv
-        ├── robustness_results.csv
-        └── loss_comparison.csv
+├── requirements.txt
+├── .gitignore
+├── LICENSE
+│
+├── notebooks/
+│   └── Biomedical_Image_Analysis.ipynb          # end-to-end notebook (Tasks 1-4)
+│
+├── figures/                                     # figures exported by the notebooks
+│
+├── outputs/                                     
+│   ├── experiment_config.json                   
+│   ├── validation_otsu_vs_unet.csv              # per-image Otsu vs U-Net Dice/IoU
+│   ├── loss_comparison.csv                      # BCE / Dice / BCE+Dice ablation
+│   ├── robustness_results.csv                   # blur / low-contrast corruption metrics
+│   ├── hybrid_test_records.csv                  # Task 4 structured records
+│   ├── hybrid_test_records.json
+│   ├── hybrid_raw_llm_outputs.json              # raw LLM responses (audit trail)
+│   └── unet_bce_dice_best.pt                    # trained U-Net weights (~7.7 MB)
+│
+└── data/
+    └── README.md                               
 ```
-
-### What the output files contain
-
-| File | Contents |
-|---|---|
-| `hybrid_test_records.csv` / `.json` | Task 4 structured records per test image: `image_id, n_objects, mean_area, density_class, quality_flag` + narrative. |
-| `hybrid_raw_llm_outputs.json` | Raw, unparsed LLM responses, retained for auditability. |
-| `validation_otsu_vs_unet.csv` | Per-image Dice/IoU for Otsu vs. U-Net across the 20 validation images. |
-| `robustness_results.csv` | Metrics for the blur / low-contrast corruption experiment. |
-| `loss_comparison.csv` | Loss ablation results (BCE / Dice / BCE+Dice). |
-| `experiment_config.json` | Seed, data split and training hyperparameters for reproducibility. |
-| `unet_bce_dice_best.pt` | Trained weights for the best-validation U-Net. |
-
-> `assignment3_output/` holds the notebook's raw outputs; `assignment3_submission/` is the curated
-> set handed in (it adds the config, the model checkpoint, and the ablation/robustness CSVs). Some
-> files appear in both — the submission copies are the canonical ones.
 
 ---
 
 ## Dataset
 
-Paired fluorescence-microscopy images and binary nuclei masks. The directory audit found 116
-candidate raw images and 112 masks → **112 valid pairs** (4 unmatched raw images dropped). Images
-are grayscale, resized to **256 × 256**, split **80 / 20 / 12** train/validation/test with a fixed
-**seed of 42**.
-
-The image data itself is **not committed** to this repo (size / licensing). To reproduce, place
-the images and masks where the notebook's data paths expect them.
+Paired fluorescence-microscopy images and binary nuclei masks: **112 valid image-mask pairs**,
+converted to grayscale and resized to **256 x 256**, split **80 / 20 / 12** train/validation/test
+with a fixed **seed of 42**. The image data is **not committed** (size / licensing) — place it where
+the notebook's data paths expect it and describe the source in `data/README.md`.
 
 ---
 
-## Requirements
+## Setup
 
-- Python 3.10+
-- PyTorch + TorchVision
-- scikit-image, NumPy, pandas, matplotlib, Pillow
-- [Ollama](https://ollama.com) running locally, with the **LLaVA** model pulled (`ollama pull llava`)
+**Python packages** (`requirements.txt`):
 
-> **Note on the VLM.** The brief specifies `llama3.2-vision`, but that model wasn't reliable in the
-> runtime, so **LLaVA** was used for the image-description step instead. It fills the same role in
-> the pipeline; the VLM outputs reflect LLaVA, not `llama3.2-vision`.
+```
+torch
+torchvision
+scikit-image
+numpy
+pandas
+matplotlib
+pillow
+ollama
+```
+
+**Local models** (via [Ollama](https://ollama.com)):
+
+```bash
+# install Ollama (see ollama.com), start the server, then:
+ollama pull qwen2.5vl:7b
+ollama pull llama3.2:3b
+```
 
 ---
 
 ## How to run
 
-Open `Assignment_3/Assignment3_Hybrid_Biomedical_Image_Analysis.ipynb` in Google Colab (or
-Jupyter), make the dataset available, and run the cells top to bottom. Tasks 1 → 4 execute in
-order and write results to `assignment3_output/`. The LLM cells expect a reachable Ollama server,
-so run those steps locally or point them at a running Ollama instance.
+Open `notebooks/Biomedical_Image_Analysis.ipynb` in Google Colab (GPU runtime recommended) and run
+all cells top to bottom. The notebook installs and starts Ollama, pulls the two models, runs Tasks
+1 -> 4, writes every artifact to `assignment3_outputs/`, and bundles `assignment3_submission.zip`.
+Locally, install the requirements, start Ollama with both models pulled, then run the notebook.
 
 ---
 
@@ -135,8 +150,8 @@ independent external validation on a larger, clinically representative, expert-a
 ## References
 
 1. Ronneberger, O., Fischer, P. & Brox, T. (2015). *U-Net: Convolutional Networks for Biomedical Image Segmentation.* MICCAI.
-2. Otsu, N. (1979). *A Threshold Selection Method from Gray-Level Histograms.* IEEE Transactions on Systems, Man, and Cybernetics, 9(1), 62–66.
-3. Liu, H., Li, C., Wu, Q. & Lee, Y.J. (2023). *Visual Instruction Tuning.* arXiv:2304.08485.
+2. Otsu, N. (1979). *A Threshold Selection Method from Gray-Level Histograms.* IEEE Transactions on Systems, Man, and Cybernetics, 9(1), 62-66.
+3. Bai, S. et al. (2025). *Qwen2.5-VL Technical Report.* arXiv:2502.13923.
+4. Assignment 3 assessment brief, Applied Data Science assessment specification.
 
 ---
-
