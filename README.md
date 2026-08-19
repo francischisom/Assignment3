@@ -11,7 +11,7 @@ language generation *downstream* of measurable image evidence: preprocessing and
 features, a **PyTorch U-Net**, and a numbers-first LLM interpretation stage — with structured JSON
 kept as the source of truth at every step.
 
-**Author:** Ofonagoro Chisom Francis · MSc Applied Data Science, University of Hertfordshire
+**Author:** Ofonagoro Chisom Francis 
 
 ---
 
@@ -69,20 +69,23 @@ hybrid-biomedical-image-analysis/
 ├── notebooks/
 │   └── Biomedical_Image_Analysis.ipynb          # end-to-end notebook (Tasks 1-4)
 │
-├── figures/                                     # figures exported by the notebooks
+├── nuclei_figures/                              # exported plots
 │
-├── outputs/                                     
-│   ├── experiment_config.json                   
+├── nuclei_results/                               
 │   ├── validation_otsu_vs_unet.csv              # per-image Otsu vs U-Net Dice/IoU
 │   ├── loss_comparison.csv                      # BCE / Dice / BCE+Dice ablation
-│   ├── robustness_results.csv                   # blur / low-contrast corruption metrics
-│   ├── hybrid_test_records.csv                  # Task 4 structured records
+│   └── robustness_results.csv                   # blur / low-contrast corruption metrics
+│
+├── nuclei_outputs/                              
+│   ├── experiment_config.json                   
+│   ├── hybrid_test_records.csv                  
 │   ├── hybrid_test_records.json
 │   ├── hybrid_raw_llm_outputs.json              # raw LLM responses (audit trail)
 │   └── unet_bce_dice_best.pt                    # trained U-Net weights (~7.7 MB)
 │
+│
 └── data/
-    └── README.md                               
+    └── README.md                                
 ```
 
 ---
@@ -125,14 +128,15 @@ ollama pull llama3.2:3b
 
 Open `notebooks/Biomedical_Image_Analysis.ipynb` in Google Colab (GPU runtime recommended) and run
 all cells top to bottom. The notebook installs and starts Ollama, pulls the two models, runs Tasks
-1 -> 4, writes every artifact to `assignment3_outputs/`, and bundles `assignment3_submission.zip`.
-Locally, install the requirements, start Ollama with both models pulled, then run the notebook.
+1 -> 4, and writes its artifacts into `nuclei_figures/` (plots), `nuclei_results/` (evaluation
+metrics) and `nuclei_outputs/` (structured records and the trained model). Locally, install the
+requirements, start Ollama with both models pulled, then run the notebook.
 
 ---
 
 ## Reproducibility
 
-- Fixed seed (**42**) and a frozen 80/20/12 split (see `experiment_config.json`).
+- Fixed seed (**42**) and a frozen 80/20/12 split (see `nuclei_outputs/experiment_config.json`).
 - Best-validation-epoch selection rather than last-epoch.
 - **Temperature 0** for the numbers-first and hybrid LLM calls; temperature 0.2 for the VLM
   repeatability check.
@@ -154,4 +158,3 @@ independent external validation on a larger, clinically representative, expert-a
 3. Bai, S. et al. (2025). *Qwen2.5-VL Technical Report.* arXiv:2502.13923.
 4. Assignment 3 assessment brief, Applied Data Science assessment specification.
 
----
